@@ -5,7 +5,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 
 const MovableItem = () => {
     const [{isDragging}, drag] = useDrag({
-        item: {name: 'Any custom name', type: 'Irrelevant, for now'},
+        item: {name: 'Any custom name', type: 'MovableType'},
         collect: (monitor) => ({
             isDragging: monitor.isDragging(),
         }),
@@ -21,6 +21,15 @@ const MovableItem = () => {
 }
 
 const FirstColumn = () => {
+    return (
+        <div className='column first-column'>
+            Column 1
+            <MovableItem/>
+        </div>
+    )
+}
+
+const SecondColumn = () => {
     const [{canDrop, isOver}, drop] = useDrop({
         accept: 'Not existing type',
         drop: () => ({name: 'Some name'}),
@@ -30,20 +39,10 @@ const FirstColumn = () => {
         }),
     });
 
-    console.log('canDrop', canDrop);
-    console.log('isOver', isOver);
+    console.log('options', {canDrop, isOver});
 
     return (
-        <div ref={drop} className='column first-column'>
-            Column 1
-            <MovableItem/>
-        </div>
-    )
-}
-
-const SecondColumn = () => {
-    return (
-        <div className='column second-column'>
+        <div ref={drop} className='column second-column'>
             Column 2
         </div>
     )
