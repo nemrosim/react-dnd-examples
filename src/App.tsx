@@ -1,11 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-const MovableItem = () => {
+const MovableItem = ({setIsFirstColumn}) => {
     const [{isDragging}, drag] = useDrag({
         item: {name: 'Any custom name', type: 'Our first type'},
+        end: (item, monitor) => {
+            const dropResult = monitor.getDropResult();
+            if(dropResult && dropResult.name === 'Column 1'){
+                setIsFirstColumn(true)
+            } else {
+                setIsFirstColumn(false);
+            }
+        },
         collect: (monitor) => ({
             isDragging: monitor.isDragging(),
         }),
@@ -21,16 +29,10 @@ const MovableItem = () => {
 }
 
 const Column = ({children, className, title}) => {
-    const [{canDrop, isOver}, drop] = useDrop({
+    const [, drop] = useDrop({
         accept: 'Our first type',
-        drop: () => ({name: 'Some name'}),
-        collect: (monitor) => ({
-            isOver: monitor.isOver(),
-            canDrop: monitor.canDrop(),
-        }),
+        drop: () => ({name: title}),
     });
-
-    console.log('options', {canDrop, isOver});
 
     return (
         <div ref={drop} className={className}>
@@ -41,15 +43,19 @@ const Column = ({children, className, title}) => {
 }
 
 export const App = () => {
+    const [isFirstColumn, setIsFirstColumn] = useState(true);
+
+    const Item = <MovableItem setIsFirstColumn={setIsFirstColumn}/>;
+
     return (
         <div className="container">
             {/* Wrap components that will be "draggable" and "droppable" */}
             <DndProvider backend={HTML5Backend}>
                 <Column title='Column 1' className='column first-column'>
-                    {<MovableItem/>}
+                    {isFirstColumn && Item}
                 </Column>
-                <Column title='Column 1' className='column second-column'>
-                    {null}
+                <Column title='Column 2' className='column second-column'>
+                    {!isFirstColumn && Item}
                 </Column>
             </DndProvider>
         </div>
