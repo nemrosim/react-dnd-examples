@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react';
-import './App.css';
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { TouchBackend } from "react-dnd-touch-backend";
+import './App.css';
 
 const MovableItem = ({name, index, moveCardHandler, setItems}) => {
     const changeItemColumn = (currentItem, columnName) => {
@@ -83,7 +84,6 @@ const MovableItem = ({name, index, moveCardHandler, setItems}) => {
         </div>
     )
 }
-
 const Column = ({children, className, title}) => {
     const [, drop] = useDrop({
         accept: 'Our first type',
@@ -104,6 +104,7 @@ export const App = () => {
         {id: 2, name: 'Item 2', column: 'Column 1'},
         {id: 3, name: 'Item 3', column: 'Column 1'},
     ]);
+    const isMobile = window.innerWidth < 600;
 
     const moveCardHandler = (dragIndex, hoverIndex) => {
         const dragItem = items[dragIndex];
@@ -138,7 +139,7 @@ export const App = () => {
 
     return (
         <div className="container">
-            <DndProvider backend={HTML5Backend}>
+            <DndProvider backend={isMobile ? TouchBackend : HTML5Backend}>
                 <Column title='Column 1' className='column first-column'>
                     {returnItemsForColumn('Column 1')}
                 </Column>
