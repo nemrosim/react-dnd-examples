@@ -2,7 +2,9 @@ import React, { useRef, useState } from 'react';
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { TouchBackend } from "react-dnd-touch-backend";
-import './App.css';
+import './assets/styles/App.css';
+import { COLUMN_NAMES } from "./constants";
+import { tasks } from "./tasks";
 
 const MovableItem = ({name, index, moveCardHandler, setItems}) => {
     const changeItemColumn = (currentItem, columnName) => {
@@ -63,10 +65,26 @@ const MovableItem = ({name, index, moveCardHandler, setItems}) => {
         item: {index, name, type: 'Our first type'},
         end: (item, monitor) => {
             const dropResult = monitor.getDropResult();
-            if (dropResult && dropResult.name === 'Column 1') {
-                changeItemColumn(item, 'Column 1')
-            } else {
-                changeItemColumn(item, 'Column 2')
+
+            if (dropResult) {
+                const {name} = dropResult;
+                const {DO_IT, IN_PROGRESS, AWAITING_REVIEW, DONE} = COLUMN_NAMES;
+                switch (name) {
+                    case IN_PROGRESS:
+                        changeItemColumn(item, IN_PROGRESS);
+                        break;
+                    case AWAITING_REVIEW:
+                        changeItemColumn(item, AWAITING_REVIEW);
+                        break;
+                    case DONE:
+                        changeItemColumn(item, DONE);
+                        break;
+                    case DO_IT:
+                        changeItemColumn(item, DO_IT);
+                        break;
+                    default:
+                        break;
+                }
             }
         },
         collect: (monitor) => ({
@@ -92,18 +110,14 @@ const Column = ({children, className, title}) => {
 
     return (
         <div ref={drop} className={className}>
-            {title}
+            <p>{title}</p>
             {children}
         </div>
     )
 }
 
 export const App = () => {
-    const [items, setItems] = useState([
-        {id: 1, name: 'Item 1', column: 'Column 1'},
-        {id: 2, name: 'Item 2', column: 'Column 1'},
-        {id: 3, name: 'Item 3', column: 'Column 1'},
-    ]);
+    const [items, setItems] = useState(tasks);
     const isMobile = window.innerWidth < 600;
 
     const moveCardHandler = (dragIndex, hoverIndex) => {
@@ -137,14 +151,22 @@ export const App = () => {
             ))
     }
 
+    const {DO_IT, IN_PROGRESS, AWAITING_REVIEW, DONE} = COLUMN_NAMES;
+
     return (
         <div className="container">
             <DndProvider backend={isMobile ? TouchBackend : HTML5Backend}>
-                <Column title='Column 1' className='column first-column'>
-                    {returnItemsForColumn('Column 1')}
+                <Column title={DO_IT} className='column do-it-column'>
+                    {returnItemsForColumn(DO_IT)}
                 </Column>
-                <Column title='Column 2' className='column second-column'>
-                    {returnItemsForColumn('Column 2')}
+                <Column title={IN_PROGRESS} className='column in-progress-column'>
+                    {returnItemsForColumn(IN_PROGRESS)}
+                </Column>
+                <Column title={AWAITING_REVIEW} className='column awaiting-review-column'>
+                    {returnItemsForColumn(AWAITING_REVIEW)}
+                </Column>
+                <Column title={DONE} className='column done-column'>
+                    {returnItemsForColumn(DONE)}
                 </Column>
             </DndProvider>
         </div>
