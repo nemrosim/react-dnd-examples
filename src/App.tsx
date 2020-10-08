@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { TouchBackend } from "react-dnd-touch-backend";
@@ -6,7 +6,7 @@ import './assets/styles/App.css';
 import { COLUMN_NAMES } from "./constants";
 import { tasks } from "./tasks";
 
-const MovableItem = ({name, index, moveCardHandler, setItems}) => {
+const MovableItem = ({name, index, currentColumnName, moveCardHandler, setItems}) => {
     const changeItemColumn = (currentItem, columnName) => {
         setItems((prevState) => {
             return prevState.map(e => {
@@ -62,7 +62,7 @@ const MovableItem = ({name, index, moveCardHandler, setItems}) => {
     });
 
     const [{isDragging}, drag] = useDrag({
-        item: {index, name, type: 'Our first type'},
+        item: {index, name, currentColumnName, type: 'Our first type'},
         end: (item, monitor) => {
             const dropResult = monitor.getDropResult();
 
@@ -102,14 +102,41 @@ const MovableItem = ({name, index, moveCardHandler, setItems}) => {
         </div>
     )
 }
+
 const Column = ({children, className, title}) => {
-    const [, drop] = useDrop({
+    const [{isOver, canDrop}, drop] = useDrop({
         accept: 'Our first type',
         drop: () => ({name: title}),
+        collect: (monitor) => ({
+            isOver: monitor.isOver(),
+            canDrop: monitor.canDrop(),
+        }),
+        // Override monitor.canDrop() function
+        canDrop: (item: any) => {
+            const {DO_IT, IN_PROGRESS, AWAITING_REVIEW, DONE} = COLUMN_NAMES;
+            const {currentColumnName} = item;
+            return (currentColumnName === title) ||
+                (currentColumnName === DO_IT && title === IN_PROGRESS) ||
+                (currentColumnName === IN_PROGRESS && (title === DO_IT || title === AWAITING_REVIEW)) ||
+                (currentColumnName === AWAITING_REVIEW && (title === IN_PROGRESS || title === DONE)) ||
+                (currentColumnName === DONE && (title === AWAITING_REVIEW));
+        },
     });
 
+    const getBackgroundColor = () => {
+        if (isOver) {
+            if (canDrop) {
+                return 'rgb(188,251,255)'
+            } else if (!canDrop) {
+                return 'rgb(255,188,188)'
+            }
+        } else {
+            return '';
+        }
+    };
+
     return (
-        <div ref={drop} className={className}>
+        <div ref={drop} className={className} style={{backgroundColor: getBackgroundColor()}}>
             <p>{title}</p>
             {children}
         </div>
@@ -144,6 +171,7 @@ export const App = () => {
             .map((item, index) => (
                 <MovableItem key={item.id}
                              name={item.name}
+                             currentColumnName={item.column}
                              setItems={setItems}
                              index={index}
                              moveCardHandler={moveCardHandler}
